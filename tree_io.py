@@ -32,7 +32,7 @@ def update_children(pdict, cdict, inhdict, node, pheight, dif):
     return inhdict
 
 # Read tree from string s in newick format -- assuming that the given tree is ultrametric!!
-def read_newick(s):
+def read_newick(s, ranked = False):
     num_nodes = s.count(':') + 1 # number of nodes in input tree (internal nodes + leaves), root does not have ':'
     num_int_nodes = int((num_nodes - 1) / 2)
     num_leaves = int(num_nodes - num_int_nodes)
@@ -49,19 +49,21 @@ def read_newick(s):
 
 
     #sets all leaf lengths to length 0.0.
-    leaf_length = "\g<1>0.0"
-    tree_str = re.sub(r'(\d+:)\d*.\d*', leaf_length, tree_str)
-    #print(tree_str)
+    if (ranked == False):
+        leaf_length = "\g<1>0.0"
+        tree_str = re.sub(r'(\d+:)\d*.\d*', leaf_length, tree_str)
+    # print(tree_str)
 
 
     while (len(tree_str) > 0): # recurses over tree and replace internal nodes with leaves labelled by
     #internal_nodei for int i and save information about internal node height and children
 
         if int_node_index < num_int_nodes - 1: # as long as we don't reach the root
-            pattern = r'\((\w+):(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+)),(\w+):(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+))\):(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+))'
+            pattern = r'\(([^:\()]+):(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+)),([^:\()]+):(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+))\):(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+))'
         else: # we reach the root -- string of form '(node1:x,node2:y)' left
-            pattern = r'\((\w+):(\[[^\]]*\])?((\d+.\d+E?\-?\d?)|(\d+)),(\w+):(\[[^\]]*\])?((\d+.\d+E?\-?\d?)|(\d+))\);?'
+            pattern = r'\(([^:\()]+):(\[[^\]]*\])?((\d+.\d+E?\-?\d?)|(\d+)),([^:\()]+):(\[[^\]]*\])?((\d+.\d+E?\-?\d?)|(\d+))\);?'
 
+        print(tree_str)
         int_node_str = re.search(pattern, tree_str)
 
         #print("-- #{} --").format(int_node_index)
@@ -172,6 +174,8 @@ def read_newick(s):
     # following nodes as natural numbers using the shortest branch.
     for i in range(0,num_int_nodes):
         int_node_times[i] = int(round(int_node_times[i] / shortest_branch)) + 1
+        if ranked == False:
+            int_node_times[i] -= 1
         if(int_node_times[i] == int_node_times[i-1]):
             sys.exit("Times are not discrete! Decrease the shortest branch!")
         # int_node_times[i] = i+1
@@ -198,7 +202,7 @@ def read_newick(s):
                 node_list[parent_rank].children[1] = child_rank
         else: # Consider leaf
             parent_rank = num_leaves + int_node_list.index(int(parent_dict[node]))
-            node_int = int(node) - 1
+            node_int = leaf_index
             # Set parent
             node_list[node_int].parent = parent_rank
             # set time of every leaf to 0.
