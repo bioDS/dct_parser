@@ -63,7 +63,7 @@ def read_newick(s, ranked = False):
         else: # we reach the root -- string of form '(node1:x,node2:y)' left
             pattern = r'\(([^:\()]+):(\[[^\]]*\])?((\d+.\d+E?\-?\d?)|(\d+)),([^:\()]+):(\[[^\]]*\])?((\d+.\d+E?\-?\d?)|(\d+))\);?'
 
-        print(tree_str)
+        # print(tree_str)
         int_node_str = re.search(pattern, tree_str)
 
         #print("-- #{} --").format(int_node_index)
