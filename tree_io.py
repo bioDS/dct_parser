@@ -172,10 +172,12 @@ def read_newick(s, ranked = False):
 
     # Makes the height of the first internal node 1, then discretizes all
     # following nodes as natural numbers using the shortest branch.
+    # for ranked trees imply use order according to time as rank
     for i in range(0,num_int_nodes):
-        int_node_times[i] = int(round(int_node_times[i] / shortest_branch)) + 1
+        if ranked == True:
+            int_node_times[i] = int_node_list.index(i)
         if ranked == False:
-            int_node_times[i] -= 1
+            int_node_times[i] = int(round(int_node_times[i] / shortest_branch)) + 1
         if(int_node_times[i] == int_node_times[i-1]):
             sys.exit("Times are not discrete! Decrease the shortest branch!")
         # int_node_times[i] = i+1
@@ -221,7 +223,7 @@ def read_newick(s, ranked = False):
     return(output_tree)
 
 # Read trees from nexus file and save leaf labels as dict and trees as TREE_LIST
-def read_nexus(file_handle):
+def read_nexus(file_handle, ranked = False):
 
     # To get the number of trees in the given file, we find the first and last line in the file that contain a tree (Line starts with tree)
     # Count number of lines in file
@@ -230,7 +232,7 @@ def read_nexus(file_handle):
 
     # Find last line containing a tree
     for line in reversed(list(open(file_handle))):
-        re_tree = re.search(r'^TREE |^tree', line)
+        re_tree = re.search(r'^(\s)*tree', line, re.I)
         if re_tree == None:
             last_line -= 1
         else: break
@@ -238,13 +240,12 @@ def read_nexus(file_handle):
     # Find first line containing a tree
     first_line = 1
     for line in list(open(file_handle)):
-        re_tree = re.search(r'^TREE|^tree', line)
+        re_tree = re.search(r'^(\s)*tree', line, re.I)
         if re_tree == None:
             first_line += 1
         else: break
 
     num_trees = last_line - first_line + 1 # Number of trees in nexus file
-
 
     # running variables for reading trees and displaying progress
     index = 0
@@ -275,10 +276,12 @@ def read_nexus(file_handle):
     # Read trees
     for line in f:
         if num_trees > index:
-            # re_tree = re.search(r'(?:TREE|tree) .* (\(.*\);)', line)
-            re_tree = re.search(r'(?:tree|TREE) .* (\(.*\))(?:\:0\.0)?;', line)
+            if ranked == True:
+                re_tree = re.search(r'(?:TREE|tree) .* (\(.*\);)', line)
+            else:
+                re_tree = re.search(r'(?:tree|TREE) .* (\(.*\))(?:\:0\.0)?;', line)
             if re_tree != None:
-                current_tree = read_newick(re_tree.group(1))
+                current_tree = read_newick(re_tree.group(1), ranked)
                 trees[index] = current_tree
                 index += 1
                 if int(100*index/num_trees) == progress:
