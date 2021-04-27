@@ -244,11 +244,11 @@ def read_nexus(file_handle, ranked=False):
     for line in f:
         if num_trees > index:
             if ranked:
-                re_tree = re.search(r'\s*tree .* (\(.*\)(\[.*\])?;)', line, re.I)
+                re_tree = re.search(r'\s*tree .* (\(.*\)(\[.*\])?;)', line, re.I)  # Newick string is re_tree.group(1) with ;
             else:
-                re_tree = re.search(r'\s*tree .* (\(.*\))(?:\:0\.0)?(\[.*\])?;', line, re.I)
+                re_tree = re.search(r'\s*tree .* (\(.*\))(?:\:0\.0)?(\[.*\])?;', line, re.I)  # Newick string in re_tree.group(1) without ;
             if re_tree != None:
-                current_tree = read_newick(re_tree.group(1), ranked)
+                current_tree = read_newick(f'{re_tree.group(1)};', ranked)
                 trees[index] = current_tree
                 index += 1
 
@@ -259,4 +259,4 @@ def read_nexus(file_handle, ranked=False):
 
 
 if __name__ == '__main__':
-    read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/Dengue/Dengue.trees', ranked=True)
+    read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/Dengue/Dengue.trees', ranked=False)
