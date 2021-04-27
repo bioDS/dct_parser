@@ -226,29 +226,12 @@ def read_newick(s, ranked=False):
 
 # Read trees from nexus file and save leaf labels as dict and trees as TREE_LIST
 def read_nexus(file_handle, ranked=False):
-    # To get the number of trees in the given file, we find the first and last line in the file that contain a tree (Line starts with tree)
-    # Count number of lines in file
-    number_of_lines = len(open(file_handle).readlines())
-    last_line = number_of_lines
 
-    # Find last line containing a tree
-    for line in reversed(list(open(file_handle))):
-        re_tree = re.search(r'^(\s)*tree', line, re.I)
-        if re_tree == None:
-            last_line -= 1
-        else:
-            break
+    # Regex for a line containing a tree
+    re_tree = re.compile('\t?tree .*=? (.*$)', flags=re.I | re.MULTILINE)
 
-    # Find first line containing a tree
-    first_line = 1
-    for line in list(open(file_handle)):
-        re_tree = re.search(r'^(\s)*tree', line, re.I)
-        if re_tree == None:
-            first_line += 1
-        else:
-            break
-
-    num_trees = last_line - first_line + 1  # Number of trees in nexus file
+    # Count the number of lines fitting the tree regex
+    num_trees = len(re_tree.findall(open(file_handle).read()))
 
     # running variables for reading trees and displaying progress
     index = 0
@@ -260,19 +243,8 @@ def read_nexus(file_handle, ranked=False):
     trees = (TREE * num_trees)()  # Save trees in an array to give to output TREE_LIST
 
     f = open(file_handle, 'r')
-    # leaf_labels = False
-    # # Save leaf labels -- returns empty dict if no abbreviation for leaf labels is used
-    # for line in f:
-    #     if re.search(r'translate', line, re.I) != None:
-    #         leaf_labels = True
-    #     # Start reading leaf labels after 'translate' (signals start of this sequence)
-    #     if leaf_labels == True:
-    #         re_label = re.search(r'\s*(.+)\s(.+),', line)
-    #         re_stop = re.search(r';', line)
-    #         if re_stop != None:
-    #             break
-    #         elif re_label != None:
-    #             name_dict[re_label.group(1)] = re_label.group(2)
+
+    # If leaf label dict is needed, see the dtt-package or Summarizing-ran... repository!
 
     # Read trees
     for line in f:
@@ -293,3 +265,7 @@ def read_nexus(file_handle, ranked=False):
     f.close()
 
     return (tree_list);
+
+
+if __name__ == '__main__':
+    read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/Dengue/Dengue.trees')
