@@ -221,12 +221,11 @@ def read_newick(s, ranked=False):
                 node_list[parent_rank].children[1] = node_int
     node_list[num_nodes - 1].time = int_node_times[num_int_nodes - 1]
     output_tree = TREE(node_list, num_leaves, node_list[num_nodes - 1].time, -1)
-    return (output_tree)
+    return output_tree
 
 
 # Read trees from nexus file and save leaf labels as dict and trees as TREE_LIST
 def read_nexus(file_handle, ranked=False):
-
     # Regex for a line containing a tree
     re_tree = re.compile('\t?tree .*=? (.*$)', flags=re.I | re.MULTILINE)
 
@@ -235,21 +234,16 @@ def read_nexus(file_handle, ranked=False):
 
     # running variables for reading trees and displaying progress
     index = 0
-    progress = 10
-
-    # num_trees = 2
-    # ^^for debugging
 
     trees = (TREE * num_trees)()  # Save trees in an array to give to output TREE_LIST
 
-    f = open(file_handle, 'r')
-
     # If leaf label dict is needed, see the dtt-package or Summarizing-ran... repository!
 
+    f = open(file_handle, 'r')
     # Read trees
     for line in f:
         if num_trees > index:
-            if ranked == True:
+            if ranked:
                 re_tree = re.search(r'\s*tree .* (\(.*\)(\[.*\])?;)', line, re.I)
             else:
                 re_tree = re.search(r'\s*tree .* (\(.*\))(?:\:0\.0)?(\[.*\])?;', line, re.I)
@@ -257,15 +251,12 @@ def read_nexus(file_handle, ranked=False):
                 current_tree = read_newick(re_tree.group(1), ranked)
                 trees[index] = current_tree
                 index += 1
-                if int(100 * index / num_trees) == progress:
-                    print(str(progress) + '% of trees are read')
-                    progress += 10
 
     tree_list = TREE_LIST(trees, num_trees)
     f.close()
 
-    return (tree_list);
+    return tree_list
 
 
 if __name__ == '__main__':
-    read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/Dengue/Dengue.trees')
+    read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/Dengue/Dengue.trees', ranked=True)
