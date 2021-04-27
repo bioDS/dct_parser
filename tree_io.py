@@ -243,7 +243,7 @@ def read_nexus(file_handle, ranked=False):
         if ranked:
             for line in f:
                 if re_tree.match(line):
-                    trees[index] = read_newick(re.split(re_tree, line)[1])
+                    trees[index] = read_newick(re.split(re_tree, line)[1], ranked=True)
                     index += 1
         else:
             # Lars-B:   I don't know what the difference is between ranked True/False, but this should also be improved
@@ -263,8 +263,6 @@ if __name__ == '__main__':
     import numpy as np
     import timeit
 
-    # 0.31 if True
-    # 0.29 if False
 
     times = []
     for _ in range(100):
