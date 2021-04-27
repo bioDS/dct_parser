@@ -239,24 +239,36 @@ def read_nexus(file_handle, ranked=False):
 
     # If leaf label dict is needed, see the dtt-package or Summarizing-ran... repository!
 
-    f = open(file_handle, 'r')
-    # Read trees
-    for line in f:
-        if num_trees > index:
-            if ranked:
-                re_tree = re.search(r'\s*tree .* (\(.*\)(\[.*\])?;)', line, re.I)  # Newick string is re_tree.group(1) with ;
-            else:
-                re_tree = re.search(r'\s*tree .* (\(.*\))(?:\:0\.0)?(\[.*\])?;', line, re.I)  # Newick string in re_tree.group(1) without ;
-            if re_tree != None:
-                current_tree = read_newick(f'{re_tree.group(1)};', ranked)
-                trees[index] = current_tree
-                index += 1
+    with open(file_handle, 'r') as f:
+        # Read trees
+        for line in f:
+            if num_trees > index:
+                if ranked:
+                    re_tree = re.search(r'\s*tree .* (\(.*\)(\[.*\])?;)', line, re.I)  # Newick string is re_tree.group(1) with ;
+                else:
+                    re_tree = re.search(r'\s*tree .* (\(.*\))(?:\:0\.0)?(\[.*\])?;', line, re.I)  # Newick string in re_tree.group(1) without ;
+                if re_tree != None:
+                    current_tree = read_newick(f'{re_tree.group(1)}{";" if not ranked else ""}', ranked)
+                    trees[index] = current_tree
+                    index += 1
 
-    tree_list = TREE_LIST(trees, num_trees)
-    f.close()
+        tree_list = TREE_LIST(trees, num_trees)
+
 
     return tree_list
 
 
 if __name__ == '__main__':
-    read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/Dengue/Dengue.trees', ranked=False)
+
+    import numpy as np
+    import timeit
+
+    # 0.31 if True
+    # 0.29 if False
+
+    times = []
+    for _ in range(10):
+        s = timeit.default_timer()
+        read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/Dengue/Dengue.trees', ranked=False)
+        times.append(timeit.default_timer()-s)
+    print(np.mean(times))
