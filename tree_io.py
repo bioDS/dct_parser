@@ -36,9 +36,11 @@ def update_children(pdict, cdict, inhdict, node, pheight, dif):
 
 # Read tree from string s in newick format -- assuming that the given tree is ultrametric!!
 def read_newick(s, ranked=False):
-    num_nodes = s.count(':') + 1  # number of nodes in input tree (internal nodes + leaves), root does not have ':'
-    num_int_nodes = int((num_nodes - 1) / 2)
-    num_leaves = int(num_nodes - num_int_nodes)
+
+    # Only works for binary trees
+    num_int_nodes = s.count('(')
+    num_leaves = num_int_nodes + 1
+    num_nodes = num_int_nodes + num_leaves
 
     tree_str = str(s)  # copy input string -- we are going to manipulate it
 
@@ -263,10 +265,13 @@ if __name__ == '__main__':
     import numpy as np
     import timeit
 
+    read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/RSV2/RSV2.trees', ranked=True)
+    read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/RSV2/RSV2.trees', ranked=False)
 
-    times = []
-    for _ in range(100):
-        s = timeit.default_timer()
-        read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/Dengue/Dengue.trees', ranked=True)
-        times.append(timeit.default_timer()-s)
-    print(np.mean(times))
+
+    # times = []
+    # for _ in range(100):
+    #     s = timeit.default_timer()
+    #     read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/Dengue/Dengue.trees', ranked=True)
+    #     times.append(timeit.default_timer()-s)
+    # print(np.mean(times))
