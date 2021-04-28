@@ -228,7 +228,7 @@ def read_newick(s, ranked=False):
 # Read trees from nexus file and save leaf labels as dict and trees as TREE_LIST
 def read_nexus(file_handle, ranked=False):
     # Precompiled Regex for a line containing a tree
-    re_tree = re.compile("\t?tree .*=? (.*):.+;$", flags=re.I | re.MULTILINE)
+    re_tree = re.compile("\t?tree .*=? (.*)(?::\d+\.\d+);$", flags=re.I | re.MULTILINE)
 
     # Count the number of lines fitting the tree regex
     num_trees = len(re_tree.findall(open(file_handle).read()))
@@ -257,6 +257,9 @@ if __name__ == '__main__':
 
     read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/RSV2/RSV2.trees', ranked=True)
     read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/RSV2/RSV2.trees')
+
+    read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/Dengue/Dengue.trees', ranked=True)
+    read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/Dengue/Dengue.trees')
 
 
     # times = []
