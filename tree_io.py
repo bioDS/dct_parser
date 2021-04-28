@@ -228,7 +228,7 @@ def read_newick(s, ranked=False):
 # Read trees from nexus file and save leaf labels as dict and trees as TREE_LIST
 def read_nexus(file_handle, ranked=False):
     # Precompiled Regex for a line containing a tree
-    re_tree = re.compile('\t?tree .*=? (.*$)', flags=re.I | re.MULTILINE)
+    re_tree = re.compile("\t?tree .*=? (.*):.+;$", flags=re.I | re.MULTILINE)
 
     # Count the number of lines fitting the tree regex
     num_trees = len(re_tree.findall(open(file_handle).read()))
@@ -242,20 +242,10 @@ def read_nexus(file_handle, ranked=False):
 
     with open(file_handle, 'r') as f:
         # Read trees
-        if ranked:
-            for line in f:
-                if re_tree.match(line):
-                    trees[index] = read_newick(re.split(re_tree, line)[1], ranked=True)
-                    index += 1
-        else:
-            # Lars-B:   I don't know what the difference is between ranked True/False, but this should also be improved
-            #           like the ranked=True part, using a precompiled regex instead of compiling it new for each line!
-            for line in f:
-                re_tree = re.search(r'\s*tree .* (\(.*\))(?:\:0\.0)?(\[.*\])?;', line, re.I)  # Newick string in re_tree.group(1) without ;
-                if re_tree != None:
-                    current_tree = read_newick(f'{re_tree.group(1)};', ranked)
-                    trees[index] = current_tree
-                    index += 1
+        for line in f:
+            if re_tree.match(line):
+                trees[index] = read_newick(f"{re.split(re_tree, line)[1]};", ranked=ranked)
+                index += 1
 
     return TREE_LIST(trees, num_trees)
 
@@ -266,7 +256,7 @@ if __name__ == '__main__':
     import timeit
 
     read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/RSV2/RSV2.trees', ranked=True)
-    read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/RSV2/RSV2.trees', ranked=False)
+    read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/RSV2/RSV2.trees')
 
 
     # times = []
