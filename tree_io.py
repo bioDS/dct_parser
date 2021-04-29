@@ -246,27 +246,9 @@ def read_nexus(file_handle, ranked=False):
         # Read trees
         for line in f:
             if re_tree.match(line):
-                trees[index] = read_newick(f"{re.sub(root_length, '', re.split(re_tree, line)[1])};", ranked=ranked)
+                # First extract the newick string and then delete everything after the last occurence of ')'
+                trees[index] = read_newick(f'{re.split(re_tree, line)[1][:re.split(re_tree, line)[1].rfind(")")+1]};',
+                                           ranked=ranked)
                 index += 1
 
     return TREE_LIST(trees, num_trees)
-
-
-if __name__ == '__main__':
-
-    import numpy as np
-    import timeit
-
-    read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/RSV2/RSV2.trees', ranked=True)
-    read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/RSV2/RSV2.trees')
-
-    read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/Dengue/Dengue.trees', ranked=True)
-    read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/Dengue/Dengue.trees')
-
-
-    # times = []
-    # for _ in range(100):
-    #     s = timeit.default_timer()
-    #     read_nexus('/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/Dengue/Dengue.trees', ranked=True)
-    #     times.append(timeit.default_timer()-s)
-    # print(np.mean(times))
