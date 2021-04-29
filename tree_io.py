@@ -230,7 +230,6 @@ def read_nexus(file_handle, ranked=False):
     # Precompiled Regex for a line containing a tree
     re_tree = re.compile("\t?tree .*=? (.*)(?::\d+\.\d+);$", flags=re.I | re.MULTILINE)
     # Used to delete the ; and a potential branchlength of the root
-    root_length = re.compile("(?<=\))(?::\d+\.\d+);")
 
     # Count the number of lines fitting the tree regex
     num_trees = len(re_tree.findall(open(file_handle).read()))
