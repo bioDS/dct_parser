@@ -241,13 +241,29 @@ def read_nexus(file_handle, ranked=False):
 
     # If leaf label dict is needed, see the dtt-package or Summarizing-ran... repository!
 
+    # Regex to delete additional data in []
+    brackets = re.compile(r'\[[^\]]*\]')
+
     with open(file_handle, 'r') as f:
         # Read trees
         for line in f:
             if re_tree.match(line):
                 # First extract the newick string and then delete everything after the last occurence of ')'
-                trees[index] = read_newick(f'{re.split(re_tree, line)[1][:re.split(re_tree, line)[1].rfind(")")+1]};',
+                tree_string = f'{re.split(re_tree, line)[1][:re.split(re_tree, line)[1].rfind(")")+1]};'
+                # Delete data in [] from newick, otherwise read_newick breaks
+                trees[index] = read_newick(re.sub(brackets, "", tree_string),
                                            ranked=ranked)
                 index += 1
 
     return TREE_LIST(trees, num_trees)
+
+
+if __name__ == '__main__':
+
+    import numpy as np
+    import timeit
+
+    name = "bdsky_sub188_comb7-9"
+
+    read_nexus(f'/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/{name}/{name}.trees', ranked=True)
+    # read_nexus(f'/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/{name}/{name}.trees')
