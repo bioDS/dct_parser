@@ -35,7 +35,6 @@ def update_children(pdict, cdict, inhdict, node, pheight, dif):
 
 
 # Read tree from string s in newick format -- assuming that the given tree is ultrametric!!
-<<<<<<< HEAD
 def read_newick(s, ranked = False):
     tree_str = str(s) # copy input string -- we are going to manipulate it
     # Count number of nodes of tree -- this is the number of colons or the number of colons plus one (root might not have branch attached to it)
@@ -46,20 +45,12 @@ def read_newick(s, ranked = False):
         num_nodes = num_nodes + 1
     num_int_nodes = int((num_nodes - 1) / 2)
     num_leaves = int(num_nodes - num_int_nodes)
-=======
-def read_newick(s, ranked=False):
->>>>>>> bc4abe64024d69f9a2005f79011323585d3ea263
 
     # Only works for binary trees
     num_int_nodes = s.count('(')
     num_leaves = num_int_nodes + 1
     num_nodes = num_int_nodes + num_leaves
 
-<<<<<<< HEAD
-=======
-    tree_str = str(s)  # copy input string -- we are going to manipulate it
-
->>>>>>> bc4abe64024d69f9a2005f79011323585d3ea263
     # While reading the newick string, we save the tree in the following way, converting it to C TREE afterwards
     int_node_index = 0  # index of current internal node -- NOT rank!
     parent_dict = dict()  # for each node (leaves + internal) save index of parent (int_node_index)
@@ -78,23 +69,15 @@ def read_newick(s, ranked=False):
 
         if int_node_index < num_int_nodes - 1:  # as long as we don't reach the root
             pattern = r'\(([^:\()\[]+)(\[[^\]]*\])?:(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+)),([^:\()\[]+)(\[[^\]]*\])?:(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+))\)(\[[^\]]*\])?:(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+))'
-<<<<<<< HEAD
         else: # we reach the root -- string of form '(node1:x,node2:y)' left
             # print('root')
             pattern = r'\(([^:\(\[]+)(\[[^\]]*\])?:(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+)),([^:\()\[]+)(\[[^\]]*\])?:(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+))\)(\[[^\]]*\])?:?((\d+.\d+(?:e|E)?\-?\d*)|(\d+))?(\[[^\]]*\])?;'
-=======
-        else:  # we reach the root -- string of form '(node1:x,node2:y)' left
-            pattern = r'\(([^:\()\[]+)(\[[^\]]*\])?:(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+)),([^:\()\[]+)(\[[^\]]*\])?:(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+))\)(\[[^\]]*\])?;'
->>>>>>> bc4abe64024d69f9a2005f79011323585d3ea263
 
         int_node_str = re.search(pattern, tree_str)
 
-<<<<<<< HEAD
-=======
         # print("-- #{} --").format(int_node_index)
         # print(int_node_str.group())
 
->>>>>>> bc4abe64024d69f9a2005f79011323585d3ea263
         # Save new internal node as parent of its two children
         parent_dict[int_node_str.group(1)] = int_node_index
         parent_dict[int_node_str.group(7)] = int_node_index
@@ -258,42 +241,6 @@ def read_nexus(file_handle, ranked=False):
 
     # running variables for reading trees
     index = 0
-<<<<<<< HEAD
-    progress = 10
-
-    #num_trees = 2
-    # ^^for debugging
-
-    trees = (TREE * num_trees)() # Save trees in an array to give to output TREE_LIST
-
-
-    f = open(file_handle, 'r')
-    # leaf_labels = False
-    # # Save leaf labels -- returns empty dict if no abbreviation for leaf labels is used
-    # for line in f:
-    #     if re.search(r'translate', line, re.I) != None:
-    #         leaf_labels = True
-    #     # Start reading leaf labels after 'translate' (signals start of this sequence)
-    #     if leaf_labels == True:
-    #         re_label = re.search(r'\s*(.+)\s(.+),', line)
-    #         re_stop = re.search(r';', line)
-    #         if re_stop != None:
-    #             break
-    #         elif re_label != None:
-    #             name_dict[re_label.group(1)] = re_label.group(2)
-
-    # Read trees
-    for line in f:
-        if num_trees > index:
-            if ranked == True:
-                # print(line)
-                re_tree = re.search(r'\s*tree[^\(]*(\([^;]*;)', line, re.I)
-            else:
-                re_tree = re.search(r'\s*tree .* (\(.*\))(?:\:0\.0)?(\[.*\])?;', line, re.I)
-            if re_tree != None:
-                current_tree = read_newick(re_tree.group(1), ranked)
-                trees[index] = current_tree
-=======
 
     trees = (TREE * num_trees)()  # Save trees in an array to give to output TREE_LIST
 
@@ -311,7 +258,6 @@ def read_nexus(file_handle, ranked=False):
                 # Delete data in [] from newick, otherwise read_newick breaks
                 trees[index] = read_newick(re.sub(brackets, "", tree_string),
                                            ranked=ranked)
->>>>>>> bc4abe64024d69f9a2005f79011323585d3ea263
                 index += 1
 
     return TREE_LIST(trees, num_trees)
