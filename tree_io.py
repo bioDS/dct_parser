@@ -33,12 +33,16 @@ def update_children(pdict, cdict, inhdict, node, pheight, dif):
 
 # Read tree from string s in newick format -- assuming that the given tree is ultrametric!!
 def read_newick(s, ranked = False):
-    num_nodes = s.count(':') + 1 # number of nodes in input tree (internal nodes + leaves), root does not have ':'
+    tree_str = str(s) # copy input string -- we are going to manipulate it
+    # Count number of nodes of tree -- this is the number of colons or the number of colons plus one (root might not have branch attached to it)
+    num_nodes = s.count(':') # number of nodes in input tree (internal nodes + leaves), root does not have ':'
+    # If the root does not have an edge above it, we need to add one to the number of nodes, because the root hasn't been counted yet.
+    pattern = r'.*:(\d+.\d+(?:e|E)?\-?\d*);'
+    if re.search(pattern, tree_str) == None:
+        num_nodes = num_nodes + 1
     num_int_nodes = int((num_nodes - 1) / 2)
     num_leaves = int(num_nodes - num_int_nodes)
 
-
-    tree_str = str(s) # copy input string -- we are going to manipulate it
 
     # While reading the newick string, we save the tree in the following way, converting it to C TREE afterwards
     int_node_index = 0 # index of current internal node -- NOT rank!
@@ -61,19 +65,14 @@ def read_newick(s, ranked = False):
         if int_node_index < num_int_nodes - 1: # as long as we don't reach the root
             pattern = r'\(([^:\()\[]+)(\[[^\]]*\])?:(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+)),([^:\()\[]+)(\[[^\]]*\])?:(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+))\)(\[[^\]]*\])?:(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+))'
         else: # we reach the root -- string of form '(node1:x,node2:y)' left
-            pattern = r'\(([^:\()\[]+)(\[[^\]]*\])?:(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+)),([^:\()\[]+)(\[[^\]]*\])?:(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+))\)(\[[^\]]*\])?;'
+            # print('root')
+            pattern = r'\(([^:\(\[]+)(\[[^\]]*\])?:(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+)),([^:\()\[]+)(\[[^\]]*\])?:(\[[^\]]*\])?((\d+.\d+(?:e|E)?\-?\d*)|(\d+))\)(\[[^\]]*\])?:?((\d+.\d+(?:e|E)?\-?\d*)|(\d+))?(\[[^\]]*\])?;'
 
-        # print(tree_str)
         int_node_str = re.search(pattern, tree_str)
-
-        #print("-- #{} --").format(int_node_index)
-        #print(int_node_str.group())
 
         # Save new internal node as parent of its two children
         parent_dict[int_node_str.group(1)] = int_node_index
         parent_dict[int_node_str.group(7)] = int_node_index
-        # for i in range(0,17):
-        #     print(i, int_node_str.group(i))
 
         #Save new internal node as a parent of two children.
         child_dict[int_node_index] = [int_node_str.group(1), int_node_str.group(6)]
@@ -276,7 +275,8 @@ def read_nexus(file_handle, ranked = False):
     for line in f:
         if num_trees > index:
             if ranked == True:
-                re_tree = re.search(r'\s*tree .* (\(.*\)(\[.*\])?;)', line, re.I)
+                # print(line)
+                re_tree = re.search(r'\s*tree[^\(]*(\([^;]*;)', line, re.I)
             else:
                 re_tree = re.search(r'\s*tree .* (\(.*\))(?:\:0\.0)?(\[.*\])?;', line, re.I)
             if re_tree != None:
