@@ -316,7 +316,6 @@ def read_newick_alt(s):
     # Create RANKED tree (!)
     position = list(times.values()) # Times of internal nodes ordered in a list
     position.sort()
-    print(position)
     for i in range(num_nodes-1, len(leaves)-1, -1):
         # We fill the node list from top to bottom
         current_node = max(times, key=times.get)
