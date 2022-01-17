@@ -1,4 +1,4 @@
-__author__ = 'Lena Collienne'
+__author__ = 'Lena Collienne, Jordan Kettles'
 
 # Handling Tree input and output (to C)
 # Written by Lena Collienne, modified by Jordan Kettles.
@@ -228,6 +228,62 @@ def read_newick(s, ranked = False):
     output_tree = TREE(node_list, num_leaves, node_list[num_nodes - 1].time, -1)
     return output_tree
 
+
+# alternative for reading newick string iteratively by once looping through string instead of recursion.
+def read_newick_alt(s):
+
+    children = dict() # contains children for all internal nodes (as sets)
+    int_node_index = 1 # index of next internal node (they get names intX)
+    next_parent = list() # stack of added internal node that do not have two children yet. Next read node will get the last element in this list (i.e. on top of stack) as parent
+    edges = dict() # length of edges above every node (internal and leaf)
+    prev_node = str() # name of the previously considered node
+
+    # We ignore the first part of the sting up to the first bracket '(' which signals the beginning of the newick string.
+    i = 0
+    while s[i] != '(':
+        i += 1
+    i += 1 # Add one as we add a node for the bracket before starting the iteration:
+    # Add node for root (for the first opening bracket '('):
+    children['int0'] = set()
+    next_parent.append('int0')
+
+    while i < len(s) - 1: # We assume that first character is an opening bracket corresponding to the root.
+        if s[i] == '(':
+            new_node = 'int' + str(int_node_index)
+            children[new_node] = set() # Empty set of children
+            children[next_parent[len(next_parent) - 1]].add(new_node)
+            int_node_index += 1
+            prev_node = new_node
+            next_parent.append(new_node) # Parent of new_node is the node on top of the next_parent stack
+            i += 1
+        elif s[i] == ')':
+            prev_node = next_parent.pop(len(next_parent) - 1) 
+            i += 1
+        elif s[i] == ',': # Commas can be ignored. We use parentheses to identify nodes
+            i += 1
+        elif s[i] == ':': # The next element after this is the edge length of the last considered node (which can be internal node or a leaf)
+            # Read the numbers following the colon, this is the edge length of the edge leading to prev_node
+            i += 1
+            edge_length = str()
+            while s[i].isnumeric() or s[i] == '.' or s[i] == 'E' or s[i] == 'e' or s[i] == '-':
+                edge_length = edge_length + s[i]
+                i += 1
+            edges[prev_node] = float(edge_length)
+        elif s[i] != '[':
+            # We are at a leaf label
+            name = str()
+            while s[i] != ':':
+                name = name + s[i]
+                i += 1
+            # Add leaf as child of node on top of next_parent
+            children[next_parent[len(next_parent) - 1]].add(name)
+            prev_node = name
+        elif s[i] == '[':
+            # There is some information behind a node in square brackets. We do not need this information, so we ignore it.
+            while s[i] != ']':
+                i += 1
+    print('children: ', children)
+    print('edges: ',edges)
 
 # Read trees from nexus file and save leaf labels as dict and trees as TREE_LIST
 def read_nexus(file_handle, ranked=False):
