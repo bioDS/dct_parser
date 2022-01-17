@@ -339,14 +339,14 @@ def read_newick_alt(s):
             node_list[leaves.index(child_2)].parent = i
         # Add time (currently this is the rank)
         node_list[i].time = i - len(leaves) + 1
-    # Check if we got the correct tree
-    for i in range(0, num_nodes):
-        print('current node: ', i)
-        print('parents: ', node_list[i].parent)
-        print('children:', node_list[i].children[0], node_list[i].children[1], '\n')
+    # # Check if we got the correct tree
+    # for i in range(0, num_nodes):
+    #     print('current node: ', i)
+    #     print('parents: ', node_list[i].parent)
+    #     print('children:', node_list[i].children[0], node_list[i].children[1], '\n')
 
     # Create and return output tree:
-    num_leaves = len(leaves) + 1
+    num_leaves = len(leaves)
     output_tree = TREE(node_list, num_leaves, node_list[num_nodes - 1].time, -1)
     return output_tree
 
