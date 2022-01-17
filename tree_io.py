@@ -237,6 +237,7 @@ def read_newick_alt(s):
     next_parent = list() # stack of added internal node that do not have two children yet. Next read node will get the last element in this list (i.e. on top of stack) as parent
     edges = dict() # length of edges above every node (internal and leaf)
     prev_node = str() # name of the previously considered node
+    leaves = list() # list of leaf names
 
     # We ignore the first part of the sting up to the first bracket '(' which signals the beginning of the newick string.
     i = 0
@@ -275,6 +276,7 @@ def read_newick_alt(s):
             while s[i] != ':':
                 name = name + s[i]
                 i += 1
+            leaves.append(name)
             # Add leaf as child of node on top of next_parent
             children[next_parent[len(next_parent) - 1]].add(name)
             prev_node = name
@@ -282,8 +284,73 @@ def read_newick_alt(s):
             # There is some information behind a node in square brackets. We do not need this information, so we ignore it.
             while s[i] != ']':
                 i += 1
-    print('children: ', children)
-    print('edges: ',edges)
+
+    # We now need to convert our dicts 'children' and 'edge_lengths' into a TREE (as in C code)
+    # First convert edge_list into an array times of times of internal nodes.
+    # We can use the numbering of internal nodes here. Iterating backwards through their names means we go from leaf to root and can assign times to internal nodes
+    times = dict()
+    for i in range(len(children)-1, -1, -1):
+        current_node = 'int' + str(i)
+        child = children[current_node].pop() # Take an arbitrary child (and put back into set)
+        children[current_node].add(child)
+        if 'int' in child:
+            times[current_node] = times[child] + edges[child]
+        else:
+            times[current_node] = edges[child]
+
+    # We are now ready to use our information to create a tree in the C data structure
+    num_nodes = 2*len(children)+1
+    node_list = (NODE * num_nodes)()
+
+    # empty child array for initialising the node_list.
+    empty_children = (c_long * 2)()
+    empty_children[0] = -1
+    empty_children[1] = -1
+
+    # Initialise Node list
+    for i in range(0, num_nodes):
+        node_list[i] = NODE(-1, empty_children, 0)
+
+    leaves.sort() # Sort leaves alphabetical to save them in node_list
+
+    # Create RANKED tree (!)
+    position = list(times.values()) # Times of internal nodes ordered in a list
+    position.sort()
+    print(position)
+    for i in range(num_nodes-1, len(leaves)-1, -1):
+        # We fill the node list from top to bottom
+        current_node = max(times, key=times.get)
+        times.pop(current_node)
+        child_1 = children[current_node].pop()
+        child_2 = children[current_node].pop()
+        # Distinguish whether child is leaf or not to get correct index in node_list
+        if 'int' in child_1:
+            child_rank = position.index(times[child_1])
+            node_list[i].children[0] = child_rank + len(leaves)
+            node_list[child_rank + len(leaves)].parent = i
+        else:
+            node_list[i].children[0] = leaves.index(child_1)
+            node_list[leaves.index(child_1)].parent = i
+        if 'int' in child_2:
+            child_rank = position.index(times[child_2])
+            node_list[i].children[1] = child_rank + len(leaves)
+            node_list[child_rank + len(leaves)].parent = i
+        else:
+            node_list[i].children[1] = leaves.index(child_2)
+            node_list[leaves.index(child_2)].parent = i
+        # Add time (currently this is the rank)
+        node_list[i].time = i - len(leaves) + 1
+    # Check if we got the correct tree
+    for i in range(0, num_nodes):
+        print('current node: ', i)
+        print('parents: ', node_list[i].parent)
+        print('children:', node_list[i].children[0], node_list[i].children[1], '\n')
+
+    # Create and return output tree:
+    num_leaves = len(leaves) + 1
+    output_tree = TREE(node_list, num_leaves, node_list[num_nodes - 1].time, -1)
+    return output_tree
+
 
 # Read trees from nexus file and save leaf labels as dict and trees as TREE_LIST
 def read_nexus(file_handle, ranked=False):
