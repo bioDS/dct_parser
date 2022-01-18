@@ -258,7 +258,7 @@ def read_newick_alt(s):
             next_parent.append(new_node) # Parent of new_node is the node on top of the next_parent stack
             i += 1
         elif s[i] == ')':
-            prev_node = next_parent.pop(len(next_parent) - 1) 
+            prev_node = next_parent.pop(len(next_parent) - 1)
             i += 1
         elif s[i] == ',': # Commas can be ignored. We use parentheses to identify nodes
             i += 1
@@ -343,7 +343,8 @@ def read_newick_alt(s):
     # for i in range(0, num_nodes):
     #     print('current node: ', i)
     #     print('parents: ', node_list[i].parent)
-    #     print('children:', node_list[i].children[0], node_list[i].children[1], '\n')
+    #     print('children:', node_list[i].children[0], node_list[i].children[1])
+    #     print('times: ', node_list[i].time, '\n')
 
     # Create and return output tree:
     num_leaves = len(leaves)
