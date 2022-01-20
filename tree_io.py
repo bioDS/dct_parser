@@ -402,14 +402,3 @@ def read_nexus(file_handle, ranked=False):
                 index += 1
 
     return TREE_LIST(trees, num_trees)
-
-
-if __name__ == '__main__':
-
-    import numpy as np
-    import timeit
-
-    name = "bdsky_sub188_comb7-9"
-
-    read_nexus(f'/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/{name}/{name}.trees', ranked=True)
-    # read_nexus(f'/Users/larsberling/Desktop/CodingMA/Git/Summary/MDS_Plots/{name}/{name}.trees')
