@@ -5,6 +5,7 @@ __author__ = 'Lena Collienne, Jordan Kettles'
 
 import sys
 import re
+import math
 from tree_structs import *
 from collections import OrderedDict
 
@@ -229,8 +230,10 @@ def read_newick(s, ranked = False):
     return output_tree
 
 
-# alternative for reading newick string iteratively by once looping through string instead of recursion.
-def read_newick_alt(s):
+# alternative for reading newick string iteratively by once looping through string s instead of recursion.
+def read_newick_alt(s, factor = '1'):
+    # factor is the factor by which the times of internal nodes are multiplied to receive integer-valued times. Default: 1 (i.e. ranked tree)
+    factor = float(factor)
 
     children = dict() # contains children for all internal nodes (as sets)
     int_node_index = 1 # index of next internal node (they get names intX)
@@ -316,10 +319,27 @@ def read_newick_alt(s):
     # Create RANKED tree (!)
     position = list(times.values()) # Times of internal nodes ordered in a list
     position.sort()
+    prev_node_time = -1
     for i in range(num_nodes-1, len(leaves)-1, -1):
         # We fill the node list from top to bottom
         current_node = max(times, key=times.get)
-        times.pop(current_node)
+
+        # Get the integer-valued node time
+        if factor > 1: # In practice we expect factor to be much larger than 1!
+            node_time = int(math.ceil(times.pop(current_node)*factor)) # We multiply times by factor and round them up to next integer
+        else: # In this case we return a ranked tree
+            times.pop(current_node)
+            node_time = i - len(leaves) + 1
+        if node_time == prev_node_time:
+            # If there is already a node with this time, then substract one
+            node_time -=1
+        if node_time == 0:
+            print('The factor for discretising trees needs to be bigger')
+            return(1)
+        # Set node time in C data structure
+        node_list[i].time = node_time
+
+        # Find children and add data to C data structure
         child_1 = children[current_node].pop()
         child_2 = children[current_node].pop()
         # Distinguish whether child is leaf or not to get correct index in node_list
@@ -337,14 +357,14 @@ def read_newick_alt(s):
         else:
             node_list[i].children[1] = leaves.index(child_2)
             node_list[leaves.index(child_2)].parent = i
-        # Add time (currently this is the rank)
-        node_list[i].time = i - len(leaves) + 1
-    # # Check if we got the correct tree
-    # for i in range(0, num_nodes):
-    #     print('current node: ', i)
-    #     print('parents: ', node_list[i].parent)
-    #     print('children:', node_list[i].children[0], node_list[i].children[1])
-    #     print('times: ', node_list[i].time, '\n')
+        # We keep the node time for the next iteration to make sure no two nodes get the same time
+        prev_node_time = node_time
+    # Check if we got the correct tree
+    for i in range(0, num_nodes):
+        print('current node: ', i)
+        print('parents: ', node_list[i].parent)
+        print('children:', node_list[i].children[0], node_list[i].children[1])
+        print('times: ', node_list[i].time, '\n')
 
     # Create and return output tree:
     num_leaves = len(leaves)
