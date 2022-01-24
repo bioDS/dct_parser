@@ -360,11 +360,11 @@ def read_newick_alt(s, factor = '1'):
         # We keep the node time for the next iteration to make sure no two nodes get the same time
         prev_node_time = node_time
     # Check if we got the correct tree
-    for i in range(0, num_nodes):
-        print('current node: ', i)
-        print('parents: ', node_list[i].parent)
-        print('children:', node_list[i].children[0], node_list[i].children[1])
-        print('times: ', node_list[i].time, '\n')
+    # for i in range(0, num_nodes):
+    #     print('current node: ', i)
+    #     print('parents: ', node_list[i].parent)
+    #     print('children:', node_list[i].children[0], node_list[i].children[1])
+    #     print('times: ', node_list[i].time, '\n')
 
     # Create and return output tree:
     num_leaves = len(leaves)
@@ -397,8 +397,7 @@ def read_nexus(file_handle, ranked=False):
                 # First extract the newick string and then delete everything after the last occurence of ')'
                 tree_string = f'{re.split(re_tree, line)[1][:re.split(re_tree, line)[1].rfind(")")+1]};'
                 # Delete data in [] from newick, otherwise read_newick breaks
-                trees[index] = read_newick(re.sub(brackets, "", tree_string),
-                                           ranked=ranked)
+                trees[index] = read_newick_alt(re.sub(brackets, "", tree_string), factor=1)
                 index += 1
 
     return TREE_LIST(trees, num_trees)
