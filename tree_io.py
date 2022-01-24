@@ -273,6 +273,8 @@ def read_newick_alt(s, factor = '1'):
                 edge_length = edge_length + s[i]
                 i += 1
             edges[prev_node] = float(edge_length)
+        elif s[i] == ';': # We are at the end of the string
+            break
         elif s[i] != '[':
             # We are at a leaf label
             name = str()
