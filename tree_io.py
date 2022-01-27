@@ -321,6 +321,9 @@ def read_newick_alt(s, factor = '1'):
     # Create RANKED tree (!)
     position = list(times.values()) # Times of internal nodes ordered in a list
     position.sort()
+    if len(position) != len(set(position)):
+        print('Error. There are internal nodes with equal times.')
+        return(1)
     prev_node_time = -1
     for i in range(num_nodes-1, len(leaves)-1, -1):
         # We fill the node list from top to bottom
