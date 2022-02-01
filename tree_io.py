@@ -231,8 +231,8 @@ def read_newick(s, ranked = False):
 
 
 # alternative for reading newick string iteratively by once looping through string s instead of recursion.
-def read_newick_alt(s, factor = '1'):
-    # factor is the factor by which the times of internal nodes are multiplied to receive integer-valued times. Default: 1 (i.e. ranked tree)
+def read_newick_alt(s, factor = '0'):
+    # factor is the factor by which the times of internal nodes are multiplied to receive integer-valued times. Default: 0 -- ranked tree (we don't multiply be zero for ranked trees, instead we take the order of internal nodes if factor == 0)
     factor = float(factor)
 
     children = dict() # contains children for all internal nodes (as sets)
@@ -330,7 +330,7 @@ def read_newick_alt(s, factor = '1'):
         current_node = max(times, key=times.get)
 
         # Get the integer-valued node time
-        if factor > 1: # In practice we expect factor to be much larger than 1!
+        if factor > 0: # In practice we expect factor to be much larger than 1!
             node_time = int(math.ceil(times.pop(current_node)*factor)) # We multiply times by factor and round them up to next integer
         else: # In this case we return a ranked tree
             times.pop(current_node)
