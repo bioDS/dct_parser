@@ -231,7 +231,7 @@ def read_newick(s, ranked = False):
 
 
 # alternative for reading newick string iteratively by once looping through string s instead of recursion.
-def read_newick_alt(s, factor = '0'):
+def read_newick_alt(s, factor = 0):
     # factor is the factor by which the times of internal nodes are multiplied to receive integer-valued times. Default: 0 -- ranked tree (we don't multiply be zero for ranked trees, instead we take the order of internal nodes if factor == 0)
     factor = float(factor)
 
@@ -378,7 +378,7 @@ def read_newick_alt(s, factor = '0'):
 
 
 # Read trees from nexus file and save leaf labels as dict and trees as TREE_LIST
-def read_nexus(file_handle, ranked=False):
+def read_nexus(file_handle, f=0): # factor is the factor for discretising trees -- see read_newick. If 0, we read trees as ranked trees.
     # Precompiled Regex for a line containing a tree
     re_tree = re.compile("\t?tree .*=? (.*);$", flags=re.I | re.MULTILINE)
     # Used to delete the ; and a potential branchlength of the root
@@ -402,7 +402,7 @@ def read_nexus(file_handle, ranked=False):
                 # First extract the newick string and then delete everything after the last occurence of ')'
                 tree_string = f'{re.split(re_tree, line)[1][:re.split(re_tree, line)[1].rfind(")")+1]};'
                 # Delete data in [] from newick, otherwise read_newick breaks
-                trees[index] = read_newick_alt(re.sub(brackets, "", tree_string), factor=1)
+                trees[index] = read_newick_alt(re.sub(brackets, "", tree_string), f)
                 index += 1
 
     return TREE_LIST(trees, num_trees)
