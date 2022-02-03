@@ -206,8 +206,12 @@ def read_nexus(file_handle, factor=0): # factor is the factor for discretising t
             if re_tree.match(line):
                 # First extract the newick string and then delete everything after the last occurence of ')'
                 tree_string = f'{re.split(re_tree, line)[1][:re.split(re_tree, line)[1].rfind(")")+1]};'
-                # Delete data in [] from newick, otherwise read_newick breaks
-                trees[index] = read_newick(re.sub(brackets, "", tree_string), factor)
+                t = read_newick(re.sub(brackets, "", tree_string), factor)
+                if t != 1:
+                    trees[index] = t
+                else:
+                    print("Couldn't read all trees in file, choose higher value for 'factor'.")
+                    return(1)
                 index += 1
 
     return TREE_LIST(trees, num_trees)
