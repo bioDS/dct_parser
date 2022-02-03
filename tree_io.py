@@ -194,6 +194,7 @@ def read_nexus(file_handle, factor=0): # factor is the factor for discretising t
     index = 0
 
     trees = (TREE * num_trees)()  # Save trees in an array to give to output TREE_LIST
+    max_root_time = 0 # Maximum root time of the trees in the given file
 
     # If leaf label dict is needed, see the dtt-package or Summarizing-ran... repository!
 
@@ -209,9 +210,10 @@ def read_nexus(file_handle, factor=0): # factor is the factor for discretising t
                 t = read_newick(re.sub(brackets, "", tree_string), factor)
                 if t != 1:
                     trees[index] = t
+                    max_root_time = max(max_root_time,t.tree[2*t.num_leaves-2].time) # update root time (if necessary)
                 else:
                     print("Couldn't read all trees in file, choose higher value for 'factor'.")
                     return(1)
                 index += 1
 
-    return TREE_LIST(trees, num_trees)
+    return TREE_LIST(trees, num_trees, max_root_time)

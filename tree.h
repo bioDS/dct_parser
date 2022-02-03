@@ -38,7 +38,8 @@ typedef struct Tree{
  */
 typedef struct Tree_List{
   Tree * trees;
-  int num_trees;
+  long num_trees;
+  long max_root_time;
 } Tree_List;
 
 /* A Path is a matrix representation of a list of moves to convert one tree
