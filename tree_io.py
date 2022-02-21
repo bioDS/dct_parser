@@ -123,7 +123,7 @@ def read_newick(s, factor = 0):
 
     leaves.sort() # Sort leaves alphabetical to save them in node_list
 
-    # Create RANKED tree (!)
+    # Create tree
     position = list(times.values()) # Times of internal nodes ordered in a list
     position.sort()
     if len(position) != len(set(position)):
@@ -140,9 +140,11 @@ def read_newick(s, factor = 0):
         else: # In this case we return a ranked tree
             times.pop(current_node)
             node_time = i - len(leaves) + 1
-        if node_time == prev_node_time:
-            # If there is already a node with this time, then substract one
-            node_time -=1
+        if prev_node_time > -1 and node_time >= prev_node_time:
+            # If there is already a node with this time we need to pick the next lower time that is not taken yet
+            # This is prev_node_time - 1
+            node_time = prev_node_time - 1
+            prev_node_time = node_time
         if node_time == 0:
             print('The factor for discretising trees needs to be bigger')
             return(1)
@@ -174,7 +176,7 @@ def read_newick(s, factor = 0):
     #     print('current node: ', i)
     #     print('parents: ', node_list[i].parent)
     #     print('children:', node_list[i].children[0], node_list[i].children[1])
-    #     print('times: ', node_list[i].time, '\n')
+        # print('times: ', node_list[i].time)
 
     # Create and return output tree:
     num_leaves = len(leaves)
