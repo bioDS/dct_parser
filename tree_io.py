@@ -219,3 +219,62 @@ def read_nexus(file_handle, factor=0): # factor is the factor for discretising t
                 index += 1
 
     return TREE_LIST(trees, num_trees, max_root_time)
+
+
+def read_from_cluster(s):
+    # Note that we assume that leafs are labelled by integers
+    # Read a tree from a string s that is the cluster representation of the tree (with times)
+    clusters = s.split("{")
+    leaf_pattern = re.compile(r'([^,^}^:]*)[,}\]]')
+    num_leaves = len(clusters)
+    highest_ancestor=[] # save highest ancestor for leaf i that we already found at position i
+
+    # We are now ready to use our information to create a tree in the C data structure
+    num_nodes = 2*num_leaves-1
+    node_list = (NODE * num_nodes)()
+
+    # empty child array for initialising the node_list.
+    empty_children = (c_long * 2)()
+    empty_children[0] = -1
+    empty_children[1] = -1
+
+    # Initialise Node list
+    for i in range(0, num_nodes):
+        node_list[i] = NODE(-1, empty_children, 0)
+        if i >= num_leaves:
+            node_list[i].time = i - (num_leaves-1)
+
+    for i in range(0,num_leaves):
+        highest_ancestor.append(i)
+    for i in range(1,num_leaves):
+        # print('cluster:', clusters[i])
+        # print('highest_ancestor:', highest_ancestor)
+        m = leaf_pattern.findall(clusters[i])
+        # print('m:', m)
+        child1 = -1
+        child2 = -1
+        for k in range(0,len(m)-1): # loop through elements in clusters (last element in m is time of cluster)
+            leaf = m[k]
+            # print('leaf:', leaf)
+            leaf_index = int(leaf)-1
+            if child1 == -1:
+                child1 = highest_ancestor[leaf_index]
+            elif child1 != highest_ancestor[leaf_index]:
+                child2 = highest_ancestor[leaf_index]
+            # print('children:', child1, child2)
+            highest_ancestor[leaf_index]=i+num_leaves-1
+        node_list[i+num_leaves-1].children[0]=child1
+        node_list[i+num_leaves-1].children[1]=child2
+        node_list[child1].parent = i+num_leaves-1
+        node_list[child2].parent = i+num_leaves-1
+        node_list[i+num_leaves-1].time = int(m[-1])
+
+    # # Check if we got the correct tree
+    for i in range(0, num_nodes):
+        print('current node: ', i)
+        print('parents: ', node_list[i].parent)
+        print('children:', node_list[i].children[0], node_list[i].children[1])
+        print('time: ', node_list[i].time)
+
+    output_tree = TREE(node_list, num_leaves, node_list[num_nodes - 1].time, -1)
+    return output_tree
