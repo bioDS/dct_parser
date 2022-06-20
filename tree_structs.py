@@ -3,7 +3,7 @@ __author__ = 'Lena Collienne'
 import os
 from ctypes import *
 
-lib = CDLL(f'{os.path.dirname(os.path.realpath(__file__))}/tree.so')
+# lib = CDLL(f'{os.path.dirname(os.path.realpath(__file__))}/tree.so')
 
 class NODE(Structure):
     _fields_ = [('parent', c_long), ('children', c_long * 2), ('time', c_long)] # The order of arguments here matters! Needs to be the same as in C code!
