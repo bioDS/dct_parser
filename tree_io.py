@@ -270,11 +270,11 @@ def read_from_cluster(s):
         node_list[i+num_leaves-1].time = int(m[-1])
 
     # # Check if we got the correct tree
-    for i in range(0, num_nodes):
-        print('current node: ', i)
-        print('parents: ', node_list[i].parent)
-        print('children:', node_list[i].children[0], node_list[i].children[1])
-        print('time: ', node_list[i].time)
+    # for i in range(0, num_nodes):
+    #     print('current node: ', i)
+    #     print('parents: ', node_list[i].parent)
+    #     print('children:', node_list[i].children[0], node_list[i].children[1])
+    #     print('time: ', node_list[i].time)
 
     output_tree = TREE(node_list, num_leaves, node_list[num_nodes - 1].time, -1)
     return output_tree
