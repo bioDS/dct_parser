@@ -53,19 +53,4 @@ typedef struct Path{
   long length;
 } Path;
 
-extern Tree read_tree_from_string(int, char*);
-extern Tree_List one_neighbourhood(Tree *t);
-extern Tree_List one_suburb(Tree *t, long max_root_time);
-extern Tree_List read_trees_from_file(char* filename);
-extern char *tree_to_string(Tree *t);
-extern void free_tree_list(Tree_List *tl);
-extern Path findpath(Tree * start_tree, Tree * dest_tree);
-extern long findpath_distance(Tree *start_tree, Tree *dest_tree);
-extern Tree_List return_findpath(Tree_List tree_list);
-extern Tree follow_path(Path * p, Tree * start_tree, long path_index);
-extern int copy_tree(Tree *source_tree, Tree *dest_tree);
-extern int get_num_digits(int);
-extern void *emalloc(size_t);
-extern void print_tree_info(Tree*);
-
 #endif

@@ -10,31 +10,6 @@ from tree_structs import *
 from collections import OrderedDict
 
 
-# Update the height of the node child by the height of the parent - difference.
-def update_child(pdict, cdict, inhdict, child, pheight, dif):
-    prevheight = inhdict[child]
-    inhdict[child] = prevheight + (pheight - dif)
-    inhdict = update_children(pdict, cdict, inhdict, child, inhdict[child], prevheight)
-    # print("inhdict[child] = " + str(prevheight) + " + " + str(pheight - dif))
-    # print(str(prevheight) + " ---> " + str(inhdict[child]))
-    return inhdict
-
-
-# Update children finds the internal nodes of node and updates their heights.
-def update_children(pdict, cdict, inhdict, node, pheight, dif):
-    children_list = [key for (key, value) in pdict.items() if value == node]
-    in1 = re.findall(r"internal_node(\d+)", children_list[0])
-    in2 = re.findall(r"internal_node(\d+)", children_list[1])
-    # print("Updating the children of {}, node {} & node {}.").format(node, children_list[0], children_list[1])
-    # print(children_list[0] + " " + children_list[1])
-
-    if len(in1) > 0:
-        inhdict = update_child(pdict, cdict, inhdict, int(in1[0]), pheight, dif)
-    if len(in2) > 0:
-        inhdict = update_child(pdict, cdict, inhdict, int(in2[0]), pheight, dif)
-    return inhdict
-
-
 # alternative for reading newick string iteratively by once looping through string s instead of recursion.
 def read_newick(s, factor = 0):
     # factor is the factor by which the times of internal nodes are multiplied to receive integer-valued times. Default: 0 -- ranked tree (we don't multiply be zero for ranked trees, instead we take the order of internal nodes if factor == 0)
