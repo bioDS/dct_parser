@@ -146,12 +146,6 @@ def read_newick(s, factor = 0):
             node_list[leaves.index(child_2)].parent = i
         # We keep the node time for the next iteration to make sure no two nodes get the same time
         prev_node_time = node_time
-    # Check if we got the correct tree
-    # for i in range(0, num_nodes):
-    #     print('current node: ', i)
-    #     print('parents: ', node_list[i].parent)
-    #     print('children:', node_list[i].children[0], node_list[i].children[1])
-        # print('times: ', node_list[i].time)
 
     # Create and return output tree:
     num_leaves = len(leaves)
@@ -222,21 +216,16 @@ def read_from_cluster(s):
     for i in range(0,num_leaves):
         highest_ancestor.append(i)
     for i in range(1,num_leaves):
-        # print('cluster:', clusters[i])
-        # print('highest_ancestor:', highest_ancestor)
         m = leaf_pattern.findall(clusters[i])
-        # print('m:', m)
         child1 = -1
         child2 = -1
         for k in range(0,len(m)-1): # loop through elements in clusters (last element in m is time of cluster)
             leaf = m[k]
-            # print('leaf:', leaf)
             leaf_index = int(leaf)-1
             if child1 == -1:
                 child1 = highest_ancestor[leaf_index]
             elif child1 != highest_ancestor[leaf_index]:
                 child2 = highest_ancestor[leaf_index]
-            # print('children:', child1, child2)
             highest_ancestor[leaf_index]=i+num_leaves-1
         node_list[i+num_leaves-1].children[0]=child1
         node_list[i+num_leaves-1].children[1]=child2
@@ -244,12 +233,36 @@ def read_from_cluster(s):
         node_list[child2].parent = i+num_leaves-1
         node_list[i+num_leaves-1].time = int(m[-1])
 
-    # # Check if we got the correct tree
-    # for i in range(0, num_nodes):
-    #     print('current node: ', i)
-    #     print('parents: ', node_list[i].parent)
-    #     print('children:', node_list[i].children[0], node_list[i].children[1])
-    #     print('time: ', node_list[i].time)
-
     output_tree = TREE(node_list, num_leaves, node_list[num_nodes - 1].time, -1)
     return output_tree
+
+
+def print_cluster_tree(tree):
+    # print tree in cluster representation (for testing)
+
+    num_leaves = tree.num_leaves
+    num_nodes = 2 * num_leaves - 1
+    cluster_list = list() # pos i in list: string containing all leaves descending from node at rank i, separated by ","
+    for i in range(0,num_leaves-1):
+        cluster_list.append("")
+    for i in range(num_leaves, num_nodes):
+        for child_index in [0,1]:
+            if tree.tree[i].children[child_index] < num_leaves:
+                cluster_list[i - num_leaves] += str(tree.tree[i].children[child_index])
+            else:
+                cluster_list[i - num_leaves] += cluster_list[tree.tree[i].children[child_index]- num_leaves]
+            cluster_list[i - num_leaves] += ","
+
+    # iteratively build tree_str from cluster_lust
+    tree_str = "["
+    for i in range(0, num_leaves-1):
+        tree_str += "{"
+        cluster = cluster_list[i].split(",")
+        cluster.sort()
+        for leaf in cluster:
+            if len(leaf) > 0:
+                tree_str += leaf + ","
+        tree_str = tree_str[:len(tree_str)-1]
+        tree_str += "}"
+    tree_str += "]"
+    return tree_str
