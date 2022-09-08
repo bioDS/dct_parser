@@ -237,9 +237,8 @@ def read_from_cluster(s):
     return output_tree
 
 
-def print_cluster_tree(tree):
-    # print tree in cluster representation (for testing)
-
+def tree_to_cluster_string(tree):
+    # return tree as string in cluster representation (for testing)
     num_leaves = tree.num_leaves
     num_nodes = 2 * num_leaves - 1
     cluster_list = list() # pos i in list: string containing all leaves descending from node at rank i, separated by ","
