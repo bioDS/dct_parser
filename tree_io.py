@@ -10,68 +10,73 @@ from tree_structs import *
 from collections import OrderedDict
 
 
-# alternative for reading newick string iteratively by once looping through string s instead of recursion.
-def read_newick(s, factor = 0):
-    # factor is the factor by which the times of internal nodes are multiplied to receive integer-valued times. Default: 0 -- ranked tree (we don't multiply be zero for ranked trees, instead we take the order of internal nodes if factor == 0)
-    factor = float(factor)
+def get_children_edges_leaves_from_newick(tree_str):
+    # Iterate through tree_str to get
+    # (i) dict 'children' of children of each node (intX for node of rank X as keys, children as values)
+    # (ii) dict 'edge' of length of edge above every node
+    # (iii) list 'leaves' of leaf names
 
+    # we return:
     children = dict() # contains children for all internal nodes (as sets)
-    int_node_index = 1 # index of next internal node (they get names intX)
-    next_parent = list() # stack of added internal node that do not have two children yet. Next read node will get the last element in this list (i.e. on top of stack) as parent
     edges = dict() # length of edges above every node (internal and leaf)
-    prev_node = str() # name of the previously considered node
     leaves = list() # list of leaf names
 
-    # We ignore the first part of the sting up to the first bracket '(' which signals the beginning of the newick string.
+    next_parent = list() # stack of added internal node that do not have two children yet. Next read node will get the last element in this list (i.e. on top of stack) as parent
+
+    # We ignore the first part of the sting up to the first bracket '(', which signals the beginning of the newick string
     i = 0
-    while s[i] != '(':
+    while tree_str[i] != '(':
         i += 1
-    i += 1 # Add one as we add a node for the bracket before starting the iteration:
-    # Add node for root (for the first opening bracket '('):
+    i += 1 # Add one as we add a node for the bracket before starting the iteration
+    # Add node for root (for the first opening bracket '(')
     children['int0'] = set()
     next_parent.append('int0')
 
-    while i < len(s) - 1: # We assume that first character is an opening bracket corresponding to the root.
-        if s[i] == '(':
+    int_node_index = 1 # index of next internal node (X for intX)
+    prev_node = '' # name of the previously considered node
+
+    while i < len(tree_str) - 1: # We assume that first character is an opening bracket corresponding to the root
+        if tree_str[i] == '(':
             new_node = 'int' + str(int_node_index)
-            children[new_node] = set() # Empty set of children
+            children[new_node] = set() # Empty set for children
             children[next_parent[len(next_parent) - 1]].add(new_node)
             int_node_index += 1
             prev_node = new_node
             next_parent.append(new_node) # Parent of new_node is the node on top of the next_parent stack
             i += 1
-        elif s[i] == ')':
+        elif tree_str[i] == ')':
             prev_node = next_parent.pop(len(next_parent) - 1)
             i += 1
-        elif s[i] == ',': # Commas can be ignored. We use parentheses to identify nodes
+        elif tree_str[i] == ',': # Commas can be ignored. We use parentheses to identify nodes
             i += 1
-        elif s[i] == ':': # The next element after this is the edge length of the last considered node (which can be internal node or a leaf)
+        elif tree_str[i] == ':': # The next element after this is the edge length of the last considered node (which can be internal node or a leaf)
             # Read the numbers following the colon, this is the edge length of the edge leading to prev_node
             i += 1
             edge_length = str()
-            while s[i].isnumeric() or s[i] == '.' or s[i] == 'E' or s[i] == 'e' or s[i] == '-':
-                edge_length = edge_length + s[i]
+            while tree_str[i].isnumeric() or tree_str[i] == '.' or tree_str[i] == 'E' or tree_str[i] == 'e' or tree_str[i] == '-':
+                edge_length = edge_length + tree_str[i]
                 i += 1
             edges[prev_node] = float(edge_length)
-        elif s[i] == ';': # We are at the end of the string
+        elif tree_str[i] == ';': # We reached the end of the string
             break
-        elif s[i] != '[':
+        elif tree_str[i] != '[':
             # We are at a leaf label
             name = str()
-            while s[i] != ':':
-                name = name + s[i]
+            while tree_str[i] != ':':
+                name = name + tree_str[i]
                 i += 1
             leaves.append(name)
             # Add leaf as child of node on top of next_parent
             children[next_parent[len(next_parent) - 1]].add(name)
             prev_node = name
-        elif s[i] == '[':
-            # There is some information behind a node in square brackets. We do not need this information, so we ignore it.
-            while s[i] != ']':
+        elif tree_str[i] == '[': # There is some information behind a node in square brackets. We do not need this information, so we ignore it.
+            while tree_str[i] != ']':
                 i += 1
+    return children, edges, leaves
 
-    # We now need to convert our dicts 'children' and 'edge_lengths' into a TREE (as in C code)
-    # First convert edge_list into an array times of times of internal nodes.
+
+def tree_times(edges, children):
+    # return dict containing times of internal nodes
     # We can use the numbering of internal nodes here. Iterating backwards through their names means we go from leaf to root and can assign times to internal nodes
     times = dict()
     for i in range(len(children)-1, -1, -1):
@@ -82,28 +87,37 @@ def read_newick(s, factor = 0):
             times[current_node] = times[child] + edges[child]
         else:
             times[current_node] = edges[child]
+    return times
 
-    # We are now ready to use our information to create a tree in the C data structure
+
+# alternative for reading newick string iteratively by once looping through string s instead of recursion.
+def read_newick(s, factor = 0):
+
+    factor = float(factor) # factor by which the times of internal nodes are multiplied to receive integer-valued times. Default: 0 -- ranked tree (we don't multiply be zero for ranked trees, instead we take the order of internal nodes if factor == 0)
+
+    (children, edges, leaves) = get_children_edges_leaves_from_newick(s)
+
+    times = tree_times(edges, children)
+
+    # Create empty node_list for output TREE
     num_nodes = 2*len(children)+1
     node_list = (NODE * num_nodes)()
 
-    # empty child array for initialising the node_list.
     empty_children = (c_long * 2)()
     empty_children[0] = -1
     empty_children[1] = -1
 
-    # Initialise Node list
     for i in range(0, num_nodes):
         node_list[i] = NODE(-1, empty_children, 0)
 
     leaves.sort() # Sort leaves alphabetical to save them in node_list
 
-    # Create tree
-    position = list(times.values()) # Times of internal nodes ordered in a list
-    position.sort()
-    if len(position) != len(set(position)):
+    ranking = list(times.values()) # Internal nodes ordered according to ranking (increasing time)
+    ranking.sort()
+    if len(ranking) != len(set(ranking)):
         print('Error. There are internal nodes with equal times.')
-        return(1)
+        return 1
+
     prev_node_time = -1
     for i in range(num_nodes-1, len(leaves)-1, -1):
         # We fill the node list from top to bottom
@@ -122,7 +136,7 @@ def read_newick(s, factor = 0):
             prev_node_time = node_time
         if node_time == 0:
             print('The factor for discretising trees needs to be bigger')
-            return(1)
+            return 1
         # Set node time in C data structure
         node_list[i].time = node_time
 
@@ -130,20 +144,15 @@ def read_newick(s, factor = 0):
         child_1 = children[current_node].pop()
         child_2 = children[current_node].pop()
         # Distinguish whether child is leaf or not to get correct index in node_list
-        if 'int' in child_1:
-            child_rank = position.index(times[child_1])
-            node_list[i].children[0] = child_rank + len(leaves)
-            node_list[child_rank + len(leaves)].parent = i
-        else:
-            node_list[i].children[0] = leaves.index(child_1)
-            node_list[leaves.index(child_1)].parent = i
-        if 'int' in child_2:
-            child_rank = position.index(times[child_2])
-            node_list[i].children[1] = child_rank + len(leaves)
-            node_list[child_rank + len(leaves)].parent = i
-        else:
-            node_list[i].children[1] = leaves.index(child_2)
-            node_list[leaves.index(child_2)].parent = i
+        for k in [0,1]:
+            child = locals()["child_" + str(k+1)]
+            if 'int' in child:
+                child_rank = ranking.index(times[child])
+                node_list[i].children[k] = child_rank + len(leaves)
+                node_list[child_rank + len(leaves)].parent = i
+            else:
+                node_list[i].children[k] = leaves.index(child)
+                node_list[leaves.index(child)].parent = i
         # We keep the node time for the next iteration to make sure no two nodes get the same time
         prev_node_time = node_time
 
@@ -244,10 +253,11 @@ def tree_to_cluster_string(tree):
     cluster_list = list() # pos i in list: string containing all leaves descending from node at rank i, separated by ","
     for i in range(0,num_leaves-1):
         cluster_list.append("")
+    # fill cluster list
     for i in range(num_leaves, num_nodes):
         for child_index in [0,1]:
             if tree.tree[i].children[child_index] < num_leaves:
-                cluster_list[i - num_leaves] += str(tree.tree[i].children[child_index])
+                cluster_list[i - num_leaves] += str(tree.tree[i].children[child_index]+1)
             else:
                 cluster_list[i - num_leaves] += cluster_list[tree.tree[i].children[child_index]- num_leaves]
             cluster_list[i - num_leaves] += ","
